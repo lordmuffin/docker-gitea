@@ -9,19 +9,29 @@ RUN	apk --no-cache --no-progress upgrade -f && \
 	bash \
 	git \
 	linux-pam \
-	s6 \
 	curl \
 	openssh \
-	tzdata \
-	gitea
+	tzdata
 
-COPY	s6.d /etc/s6.d
-COPY	app.ini /etc/gitea/app.ini
+RUN wget -O gitea https://dl.gitea.io/gitea/1.8/gitea-1.8-linux-amd64 && \
+	chmod +x gitea && \
+	ls -l
 
-RUN	ln -s /data/ssh/ssh_host_ed25519_key /etc/ssh/ && \
-	ln -s /data/ssh/ssh_host_rsa_key /etc/ssh/ && \
-	ln -s /data/ssh/ssh_host_dsa_key /etc/ssh && \
-	ln -s /data/ssh/ssh_host_ecdsa_key /etc/ssh/ 
+# COPY	s6.d /etc/s6.d
+COPY	app.ini /work/tmp/gitea/conf/app.ini
+COPY 	entrypoint.sh /work/entrypoint.sh
+RUN 	chmod +x entrypoint.sh
 
-ENV	USER=git
+# RUN	ln -s /data/ssh/ssh_host_ed25519_key /etc/ssh/ && \
+# 	ln -s /data/ssh/ssh_host_rsa_key /etc/ssh/ && \
+# 	ln -s /data/ssh/ssh_host_dsa_key /etc/ssh && \
+# 	ln -s /data/ssh/ssh_host_ecdsa_key /etc/ssh/ 
+
+ENV	USER=alpine
+ENV GITEA_CUSTOM=/work/tmp/gitea
+
 EXPOSE 3000 22
+
+ENTRYPOINT [ "/bin/ash", "./entrypoint.sh"]
+
+WORKDIR /work 
